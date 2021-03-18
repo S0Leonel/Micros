@@ -1,0 +1,131 @@
+#include "p16F628a.inc"    ;incluir librerias relacionadas con el dispositivo
+ __CONFIG _FOSC_INTOSCCLK & _WDTE_OFF & _PWRTE_OFF & _MCLRE_OFF & _BOREN_OFF & _LVP_OFF & _CPD_OFF & _CP_OFF   
+RES_VECT  CODE    0x0000            ; processor reset vector
+    GOTO    START                   ; go to beginning of program
+MAIN_PROG CODE                      ; let linker place main program
+;variables para el contador:
+I EQU 0x20
+J EQU 0x21
+K EQU 0x22
+CONT EQU 0x23
+L EQU 0x30
+M EQU 0x31
+N EQU 0x32
+A EQU 0x40
+E EQU 0x41
+D EQU 0x42
+
+ ;inicio del programa:
+START
+    MOVLW 0x07 ;Apagar comparadores
+    MOVWF CMCON
+    BCF STATUS, RP1 ;Cambiar al banco 1
+    BSF STATUS, RP0
+    MOVLW B'00000010' ;Establecer puerto B como salida (los 8 bits del puerto)
+    MOVWF TRISB
+    BCF STATUS, RP0 ;Regresar al banco 0
+    NOP
+INICIO:
+    ;BTFSC PORTB,1
+    ;GOTO $+6
+    BCF PORTB,0;10ms stop
+    CALL DELAY3
+    
+    BSF PORTB,0; stop
+    CALL DELAY3
+   ;BTFSS PORTB,1
+   ;GOTO INICIO   
+    BCF PORTB,0  ;poner el puerto B0 (bit 0 del puerto B) en 0->500ms
+    CALL DELAY1 ;llamar a la rutina de tiempo
+    CALL DELAY2
+    MOVLW D'3'
+    MOVWF CONT
+    DECFSZ CONT,F
+    GOTO $-1
+    BSF PORTB,0  ;poner el stop
+    CALL DELAY1 ;llamar a la rutina de tiempo
+    CALL DELAY2
+    MOVLW D'2'
+    MOVWF CONT
+    DECFSZ CONT,F
+    GOTO $-1
+    GOTO INICIO  ;regresar y repetir poner stop
+
+DELAY3:
+MOVLW D'27' 
+MOVWF A
+ALOOP:
+NOP
+NOP
+NOP
+NOP
+NOP
+NOP
+MOVLW D'50'
+MOVWF E
+ELOOP:
+MOVLW D'60'
+MOVWF D
+NOP
+DLOOP:
+DECFSZ D,F
+GOTO DLOOP
+DECFSZ E,F
+GOTO ELOOP
+DECFSZ A,F
+GOTO ALOOP
+RETURN 
+
+DELAY2:
+;NOP ;NOPs de relleno (ajuste de tiempo)
+;NOP
+MOVLW D'30'
+MOVWF L
+LLOOP:
+NOP
+NOP
+NOP
+NOP
+NOP
+MOVLW D'50'
+MOVWF M
+MLOOP:
+NOP
+MOVLW D'60'
+MOVWF N
+NOP
+NLOOP:
+DECFSZ N,F
+GOTO NLOOP
+DECFSZ M,F
+GOTO MLOOP
+DECFSZ L,F
+GOTO LLOOP
+RETURN 
+    
+DELAY1:
+    MOVLW D'100' 
+    MOVWF I
+ILOOP:
+    NOP
+    NOP
+    MOVLW D'40'
+    MOVWF J
+JLOOP:
+    NOP
+    NOP
+    MOVLW D'58' 
+    MOVWF K
+KLOOP:   
+    DECFSZ K,F
+    GOTO KLOOP
+    DECFSZ J,F
+    GOTO JLOOP
+    DECFSZ I,F
+    GOTO ILOOP
+    MOVLW D'30'
+    MOVWF J
+    DECFSZ J,F
+    GOTO $-1
+    RETURN   
+    END
