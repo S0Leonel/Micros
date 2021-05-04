@@ -1,0 +1,459 @@
+#include "p16F887.inc"   ; TODO INSERT CONFIG CODE HERE USING CONFIG BITS GENERATOR
+ 	__CONFIG	_CONFIG1,	_INTRC_OSC_NOCLKOUT & _WDT_OFF & _PWRTE_OFF & _MCLRE_ON & _CP_OFF & _CPD_OFF & _BOR_OFF & _IESO_ON & _FCMEN_ON & _LVP_OFF 
+ 	__CONFIG	_CONFIG2,	_BOR40V & _WRT_OFF
+
+RES_VECT  CODE    0x0000            ; processor reset vector
+    GOTO    START                   ; go to beginning of program
+
+MAIN_PROG CODE                      ; let linker place main program
+ 
+
+i EQU 0x30
+j EQU 0x31
+COM1  EQU 0x32
+COM2 EQU 0x33
+RESULTADO EQU 0x34
+
+START
+ 
+    BANKSEL PORTA ;
+    CLRF PORTA ;Init PORTA
+    BANKSEL ANSEL ;hasta aqui apago comparadores
+    CLRF ANSEL ;digital I/O
+    CLRF ANSELH
+    BANKSEL TRISA ;
+    CLRF TRISA
+    CLRF TRISB
+    CLRF TRISC
+    CLRF TRISD
+    CLRF TRISE
+    BCF STATUS,RP1
+    BCF STATUS,RP0
+    CLRF PORTA ;pongo los puertos de forma de salida
+    CLRF PORTB
+    CLRF PORTC 
+    CLRF PORTD
+    CLRF PORTE
+INITLCD
+    BCF PORTC,0		;reset
+    MOVLW 0x01
+    MOVWF PORTD
+    
+    BSF PORTC,1		;exec EJECUTA MANDO AL PUERTO A1 UN 1
+    CALL time
+    BCF PORTC,1         ;OFF EJECUTA MANDO AL PUERTO A1 UN 0
+    CALL time
+    
+    MOVLW 0x0C		;SECOND line
+    MOVWF PORTD
+    
+    BSF PORTC,1		;exec
+    CALL time
+    BCF PORTC,1
+    CALL time
+         
+    MOVLW 0x3C		;cursor mode
+    MOVWF PORTD
+    
+    BSF PORTC,1		;exec MODO PULSO
+    CALL time
+    BCF PORTC,1
+    CALL time
+        
+INICIO	  
+   
+    BCF PORTC,0		;command mode SI RS(ES 0 COMANDO)
+    CALL time
+    
+    MOVLW 0x80		;LCD position PRIMER RENGLON
+    MOVWF PORTD
+    CALL exec
+    
+    BSF PORTC,0		;data mode RS(ES 1 DATOS)
+    CALL time 
+    ;message1
+    BTFSC PORTE,0 ;si c  es 0 SALTA
+    CALL MENSAJESUM
+    BTFSS PORTE,0 ;si c  es 0 SALTA
+    CALL MENSAJEREST
+;*****
+;ENTRADA DEL BINARIO
+    MOVLW ' '    ;ESPACIO 5
+    MOVWF PORTD
+    CALL exec
+    MOVLW ' '		
+    MOVWF PORTD		;ESPACIO 6
+    CALL exec
+    MOVLW ' '		
+    MOVWF PORTD		;ESPACIO 7
+    CALL exec
+ ;ENTRADA BINARIO ---------------------------------------------------------------------------------
+    BTFSC PORTA,7;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTA,7 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO		
+    ;ESPACIO 8
+    BTFSC PORTA,6 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTA,6 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	  
+   ;ESPACIO 9
+    BTFSC PORTA,5 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTA,5 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	  
+    ;ESPACIO 10
+    BTFSC PORTA,4 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTA,4 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	    
+    ;ESPACIO 11
+    BTFSC PORTA,3 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTA,3 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	    
+    ;ESPACIO 12
+    BTFSC PORTA,2 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTA,2 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	    
+    ;ESPACIO 13
+    BTFSC PORTA,1 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTA,1 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	    
+    ;ESPACIO 14
+    BTFSC PORTA,0 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTA,0 ;VE SI A0 ESTA ENCENDIDO
+    CALL MANDOCERO	    
+   ;ESPACIO 15
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    BCF PORTC,0		;command mode
+    CALL time
+    MOVLW 0xC0		;LCD position RENGLON2
+    MOVWF PORTD
+    CALL exec
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;MENDAJE 2
+    BSF PORTC,0		;data mode
+    CALL time    
+    BTFSC PORTE,0 ;si c  es 0 SALTA
+    MOVLW '+'
+    BTFSS PORTE,0 ;si c  es 0 SALTA
+    MOVLW '-'
+
+    MOVWF PORTD		;ESPACIO 0
+    CALL exec 
+    MOVLW ' '
+    MOVWF PORTD		;ESPACIO 1
+    CALL exec 
+    MOVLW ' '
+    MOVWF PORTD		;ESPACIO 2
+    CALL exec 
+    MOVLW ' '
+    MOVWF PORTD		;ESPACIO 3
+    CALL exec 
+    MOVLW ' '
+    MOVWF PORTD		;ESPACIO 4
+    CALL exec 
+    MOVLW ' '
+    MOVWF PORTD		;ESPACIO 5
+    CALL exec 
+    MOVLW ' '
+    MOVWF PORTD		;ESPACIO 6
+    CALL exec 
+    MOVLW ' '
+    MOVWF PORTD		;ESPACIO 7
+    CALL exec 
+ ;ENTRADA BINARIO ---------------------------------------------------------------------------------
+    BTFSC PORTB,7;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTB,7 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO		
+    ;ESPACIO 8
+    BTFSC PORTB,6 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTB,6 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	  
+   ;ESPACIO 9
+    BTFSC PORTB,5 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTB,5 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	  
+    ;ESPACIO 10
+    BTFSC PORTB,4 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTB,4 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	    
+    ;ESPACIO 11
+    BTFSC PORTB,3 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTB,3 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	    
+    ;ESPACIO 12
+    BTFSC PORTB,2 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTB,2 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	    
+    ;ESPACIO 13
+    BTFSC PORTB,1 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTB,1 ;VE SI A0 ESTA ENCENDIDO 
+    CALL MANDOCERO	    
+    ;ESPACIO 14
+    BTFSC PORTB,0 ;VE SI A0 ESTA APAGADO 
+    CALL MANDOUNO
+    BTFSS PORTB,0 ;VE SI A0 ESTA ENCENDIDO
+    CALL MANDOCERO	    
+   ;ESPACIO 15
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    BCF PORTC,0		;command mode
+    CALL time
+    MOVLW 0x90		;LCD position RENGLON3
+    MOVWF PORTD
+    CALL exec
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;MENSAJE 3
+    BSF PORTC,0		;data mode RS(ES 1 DATOS)
+    CALL time 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 0
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 1
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 2
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 3
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 4
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 5
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 6
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 7
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 8
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 9
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 10
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 11
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 12
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 13
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 14
+    CALL exec 
+    MOVLW '_'
+    MOVWF PORTD		;ESPACIO 15
+    CALL exec 
+
+;---------------------------------------------------------------------------------------  
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    BCF PORTC,0		;command mode
+    CALL time
+    MOVLW 0xD0		;LCD position RENGLON4
+    MOVWF PORTD
+    CALL exec
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;MENSAJE 4
+    BSF PORTC,0		;data mode RS(ES 1 DATOS)
+    MOVLW 'I'
+    MOVWF PORTD		;ESPACIO 0
+    CALL exec 
+    MOVLW 'G'
+    MOVWF PORTD		;ESPACIO 1
+    CALL exec 
+    MOVLW 'U'
+    MOVWF PORTD		;ESPACIO 2
+    CALL exec 
+    MOVLW 'A'
+    MOVWF PORTD		;ESPACIO 3
+    CALL exec 
+    MOVLW 'L'
+    MOVWF PORTD		;ESPACIO 4
+    CALL exec 
+    MOVLW ' '
+    MOVWF PORTD		;ESPACIO 5
+    CALL exec 
+    MOVLW ' '
+    MOVWF PORTD		;ESPACIO 6
+    CALL exec 
+   
+    ;OPERACION
+    BTFSS PORTE,0;VE SI A0 ESTA ENCENDIDO 
+    CALL RESTA
+    BTFSC PORTE,0 ;VE SI A0 ESTA APAGADO 
+    CALL SUMA 
+     ;RESULTADO
+
+;-------------------------------------------------------------------------------------------------
+    BCF PORTC,0		;command mode
+    CALL time
+    MOVLW 0x80		;LCD position RENGLON 1
+    MOVWF PORTD
+    CALL exec
+
+    GOTO INICIO
+
+exec
+
+    BSF PORTC,1		;exec R/W(CUANDO ES 1 LEER)
+    CALL time
+    BCF PORTC,1         ; R/W(CUANDO ES 0 ESCRIBE)
+    CALL time
+    RETURN
+    
+time
+    CLRF i
+    MOVLW d'10'
+    MOVWF j
+ciclo    
+    MOVLW d'80'
+    MOVWF i
+    DECFSZ i
+    GOTO $-1
+    DECFSZ j
+    GOTO ciclo
+    RETURN
+MANDOUNO
+    MOVLW '1'
+    MOVWF PORTD		;ESPACIO N
+    CALL exec 
+    RETURN
+MANDOCERO
+    MOVLW '0'
+    MOVWF PORTD		;ESPACIO N
+    CALL exec 
+    RETURN
+MENSAJESUM
+    MOVLW 'S'    ;0
+    MOVWF PORTD
+    CALL exec
+    MOVLW 'U'		
+    MOVWF PORTD		;ESPACIO 1
+    CALL exec
+    MOVLW 'M'		
+    MOVWF PORTD		;ESPACIO 2
+    CALL exec
+    MOVLW 'A'		
+    MOVWF PORTD		;ESPACIO 3
+    CALL exec
+    MOVLW ' '		
+    MOVWF PORTD		;ESPACIO 4
+    CALL exec
+    RETURN
+
+MENSAJEREST
+    MOVLW 'R'    ;0
+    MOVWF PORTD
+    CALL exec
+    MOVLW 'E'		
+    MOVWF PORTD		;ESPACIO 1
+    CALL exec
+    MOVLW 'S'		
+    MOVWF PORTD		;ESPACIO 2
+    CALL exec
+    MOVLW 'T'		
+    MOVWF PORTD		;ESPACIO 3
+    CALL exec
+    MOVLW 'A'		
+    MOVWF PORTD		;ESPACIO 4
+    CALL exec
+    RETURN
+SUMA
+     CLRF RESULTADO
+    MOVFW PORTA
+    MOVWF COM1	    ; almaceno A
+    MOVFW PORTB
+    MOVWF COM2	    ;almaceno B
+    MOVFW COM1
+    ADDWF COM2,W
+    MOVWF RESULTADO
+    BTFSC STATUS,C ;si c  es 0 SALTA
+    CALL  MANDOUNO
+    BTFSS STATUS,C ;si c  es 0 SALTA
+    call  MANDOCERO
+
+    CALL IMPRIMIR
+    RETURN
+RESTA
+     CLRF RESULTADO
+    MOVFW PORTA
+    MOVWF COM1
+    MOVFW PORTB
+    MOVWF COM2
+    MOVFW COM2
+    SUBWF COM1,W
+    MOVWF RESULTADO
+    BTFSC STATUS,C ;si c  es 0 SALTA
+    MOVLW  '+'
+    BTFSS STATUS,C ;si c  es 0 SALTA
+    call  NEGATIVO
+    MOVWF PORTD
+    CALL exec 
+    CALL IMPRIMIR
+    RETURN
+NEGATIVO
+    MOVLW '-'
+    MOVWF PORTD		;ESPACIO 0
+    CALL exec 
+    COMF RESULTADO
+    MOVLW D'1'
+    ADDWF RESULTADO,W
+    MOVWF RESULTADO
+    CALL IMPRIMIR
+    RETURN
+IMPRIMIR 
+    BTFSS RESULTADO,7
+    CALL MANDOCERO
+    BTFSC RESULTADO,7
+    CALL MANDOUNO
+    BTFSS RESULTADO,6
+    CALL MANDOCERO
+    BTFSC RESULTADO,6
+    CALL MANDOUNO
+    BTFSS RESULTADO,5
+    CALL MANDOCERO
+    BTFSC RESULTADO,5
+    CALL MANDOUNO
+    BTFSS RESULTADO,4
+    CALL MANDOCERO
+    BTFSC RESULTADO,4
+    CALL MANDOUNO
+    BTFSS RESULTADO,3
+    CALL MANDOCERO
+    BTFSC RESULTADO,3
+    CALL MANDOUNO
+    BTFSS RESULTADO,2
+    CALL MANDOCERO
+    BTFSC RESULTADO,2
+    CALL MANDOUNO
+    BTFSS RESULTADO,1
+    CALL MANDOCERO
+    BTFSC RESULTADO,1
+    CALL MANDOUNO
+    BTFSS RESULTADO,0
+    CALL MANDOCERO
+    BTFSC RESULTADO,0
+    CALL MANDOUNO  
+    RETURN
+    END
